@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+    <robot>
+        <!-- Colors -->
+        <gazebo reference="base_link">
+            <material>Gazebo/Black</material>
+        </gazebo>
+
+        <gazebo reference="left_wheel">
+            <material>Gazebo/Gray</material>
+        </gazebo>
+       
+        <gazebo reference="right_wheel">
+            <material>Gazebo/Gray</material>
+        </gazebo>
+
+        <gazebo reference="front_caster">
+            <material>Gazebo/Gray</material>
+        </gazebo>
+
+        <gazebo reference="back_caster">
+            <material>Gazebo/Gray</material>
+        </gazebo>
+
+        <gazebo reference="front_laser">
+            <material>Gazebo/Red</material>
+        </gazebo>
+
+    </robot>
