@@ -1,0 +1,155 @@
+<?xml version="1.0"?>
+<robot name="rb1" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <material name="blue">
+        <color rgba="0 0 1 1"/>
+    </material>
+
+    <material name="red">
+        <color rgba="1 0 0 1"/>
+    </material>
+
+    <material name="gray">
+        <color rgba="0.5 0.5 0.5 1"/>
+    </material>
+
+
+    <xacro:macro name="cylinder_inertia" params="m r h xyz rpy">
+        <inertial>
+            <origin xyz="${xyz}" rpy="${rpy}" />
+            <mass value="${m}" />
+            <inertia ixx="${(m/12) * (3*r*r + h*h)}" ixy="0" ixz="0"
+                     iyy="${(m/12) * (3*r*r + h*h)}" iyz="0"
+                     izz="${(m/2) * (r*r)}" />
+        </inertial>
+    </xacro:macro>
+
+    <xacro:macro name="sphere_inertia" params="m r xyz rpy">
+        <inertial>
+            <origin xyz="${xyz}" rpy="${rpy}" />
+            <mass value="${m}" />
+            <inertia ixx="${(2/5) * m * r * r}" ixy="0" ixz="0"
+                     iyy="${(2/5) * m * r * r}" iyz="0"
+                     izz="${(2/5) * m * r * r}" />
+        </inertial>
+    </xacro:macro>
+
+    <link name="base_footprint" />
+
+    <!-- Base Link -->
+    <link name="base_link">
+        <visual>
+            <geometry>
+                <cylinder radius="0.25" length="0.3" />
+            </geometry>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <material name="blue" />
+        </visual>
+        <xacro:cylinder_inertia m="19.5" r="0.25" h="0.3" 
+                                            xyz="0 0 0" rpy="0 0 0" />
+    </link>
+
+    <joint name="base_joint" type="fixed">
+        <parent link="base_footprint" />
+        <child link="base_link" />
+        <origin xyz="0 0 0.15" rpy="0 0 0"/>
+    </joint>
+
+
+    <!-- Drive Wheels -->
+    <link name="left_wheel">
+        <visual>
+            <geometry>
+                <cylinder radius="0.025" length="0.05"/>
+            </geometry>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <material name="red" />
+        </visual>
+        <xacro:cylinder_inertia m="1.25" r="0.025" h="0.05" 
+                                            xyz="0 0 0" rpy="0 0 0" />
+    </link>
+    
+    <joint name="left_wheel_joint" type="continuous">
+        <parent link="base_link"/>
+        <child link="left_wheel"/>
+        <origin xyz="0.0 -0.2 -0.15" rpy="1.570795 0 0"/>
+        <axis xyz="0 0 -1"/>
+    </joint>
+
+
+    <link name="right_wheel">
+        <visual>
+            <geometry>
+                <cylinder radius="0.025" length="0.05"/>
+            </geometry>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <material name="red" />
+        </visual>
+        <xacro:cylinder_inertia m="1.25" r="0.025" h="0.05" 
+                                            xyz="0 0 0" rpy="0 0 0" />
+    </link>
+
+    <joint name="right_wheel_joint" type="continuous">
+        <parent link="base_link"/>
+        <child link="right_wheel"/>
+        <origin xyz="0.0 0.2 -0.15" rpy="1.570795 0 0"/>
+        <axis xyz="0 0 -1"/>
+    </joint>
+
+
+    <!-- Caster Wheels -->
+    <link name="front_caster">
+        <visual>
+            <geometry>
+                <sphere radius="0.025"/>
+            </geometry>
+            <material name="gray" />
+        </visual>
+        <xacro:sphere_inertia m="1.25" r="0.025" xyz="0 0 0" rpy="0 0 0" />
+    </link>
+
+    <joint name="front_caster_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="front_caster"/>
+        <origin xyz="0.1 0.0 -0.15" rpy="0 0 0"/>
+    </joint>
+
+
+    <link name="back_caster">
+        <visual>
+            <geometry>
+                <sphere radius="0.025"/>
+            </geometry>
+            <material name="gray" />
+        </visual>
+        <xacro:sphere_inertia m="1.25" r="0.025" xyz="0 0 0" rpy="0 0 0" />
+    </link>
+    
+    <joint name="back_caster_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="back_caster"/>
+        <origin xyz="-0.1 0.0 -0.15" rpy="0 0 0"/>
+    </joint>
+
+
+    <!-- Front Laser -->
+    <link name="front_laser">
+        <visual>
+            <geometry>
+                <cylinder radius="0.02" length="0.03"/>
+            </geometry>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <material name="red" />
+        </visual>
+        <xacro:cylinder_inertia m="0.5" r="0.02" h="0.03" 
+                                            xyz="0 0 0" rpy="0 0 0" />
+    </link>
+    
+    <joint name="front_laser_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="front_laser"/>
+        <origin xyz="0.25 0.0 0.075" rpy="3.14159 0 0"/>
+    </joint>
+
+
+</robot>
