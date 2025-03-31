@@ -20,7 +20,7 @@ class RotateServiceServer:
         self.current_yaw = 0.0
 
 
-        rospy.loginfo("Rotate service is ready.")
+        rospy.loginfo("Service Ready")
 
 
     def odom_callback(self, msg):
@@ -31,7 +31,8 @@ class RotateServiceServer:
 
 
     def rotate_robot(self, request):
-        rospy.loginfo(f"Received rotation request: {request.degrees} degrees!")
+        rospy.loginfo("Service Requested")
+        # rospy.loginfo(f"Received rotation request: {request.degrees} degrees!")
 
         target_angle = math.radians(request.degrees)
         start_yaw = self.current_yaw
@@ -61,9 +62,9 @@ class RotateServiceServer:
         twist_msg.angular.z = 0
         self.vel_pub.publish(twist_msg)
 
-
-        return RotateResponse(f"Rotation of {request.degrees} degrees completed successfully.")
-
+        rospy.loginfo("Service Completed")
+        # return RotateResponse(f"Rotation of {request.degrees} degrees completed successfully.")
+        return RotateResponse("Service Completed")
 
 if __name__ == "__main__":
     server = RotateServiceServer()
