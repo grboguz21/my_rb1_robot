@@ -9,63 +9,73 @@ from my_rb1_ros.srv import Rotate, RotateResponse
 
 class RotateServiceServer:
     def __init__(self):
-
         rospy.init_node('rotate_service_server')
 
-        self.service = rospy.Service('/rotate_robot', Rotate, self.rotate_robot)
-
-        self.vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
-        self.odom_sub = rospy.Subscriber('/odom', Odometry, self.odom_callback)
-
         self.current_yaw = 0.0
+        self.last_yaw = None
 
+        self.odom_sub = rospy.Subscriber('/odom', Odometry, self.odom_callback)
+        self.vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
 
+        self.service = rospy.Service('/rotate_robot', Rotate, self.rotate_robot)
         rospy.loginfo("Service Ready")
-
 
     def odom_callback(self, msg):
         orientation_q = msg.pose.pose.orientation
-        _, _, yaw = tf.transformations.euler_from_quaternion(
-            [orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w])
-        self.current_yaw = yaw  
+        _, _, yaw = tf.transformations.euler_from_quaternion([
+            orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w
+        ])
+        self.current_yaw = yaw
 
+    def normalize_angle(self, angle):
+        """Keep angle in [-pi, pi]"""
+        return math.atan2(math.sin(angle), math.cos(angle))
 
     def rotate_robot(self, request):
-        rospy.loginfo("Service Requested")
-        # rospy.loginfo(f"Received rotation request: {request.degrees} degrees!")
+        rospy.loginfo(f"Service Requested: Rotate {request.degrees} degrees")
 
-        target_angle = math.radians(request.degrees)
-        start_yaw = self.current_yaw
+        target_angle_rad = math.radians(request.degrees)
+        direction = -1 if target_angle_rad > 0 else 1
 
-        twist_msg = Twist()
-        angular_speed = 0.5 
+        fast_speed = 4.0
+        slow_speed = 2.0
 
-        # turn left or right
-        if target_angle > 0:
-            twist_msg.angular.z = angular_speed
-        else:
-            twist_msg.angular.z = -angular_speed
+        twist = Twist()
+        rate = rospy.Rate(50)
 
-        rate = rospy.Rate(10) 
-
+        turned_angle = 0.0
+        self.last_yaw = self.current_yaw
 
         while not rospy.is_shutdown():
-            current_angle = self.current_yaw - start_yaw
+            delta = self.normalize_angle(self.current_yaw - self.last_yaw)
+            turned_angle += delta
+            self.last_yaw = self.current_yaw
 
-            if abs(current_angle) >= abs(target_angle):
+            progress = abs(turned_angle) / abs(target_angle_rad)
+            remaining_deg = math.degrees(abs(target_angle_rad) - abs(turned_angle))
+            rospy.loginfo_throttle(0.2, f"Remaining: {remaining_deg:.2f}°")
+
+            if progress >= 1.0:
                 break
 
-            self.vel_pub.publish(twist_msg)
+            if progress < 0.8:
+                twist.angular.z = direction * fast_speed
+            else:
+                twist.angular.z = direction * slow_speed
+
+            self.vel_pub.publish(twist)
             rate.sleep()
 
+        twist.angular.z = 0.0
+        self.vel_pub.publish(twist)
 
-        twist_msg.angular.z = 0
-        self.vel_pub.publish(twist_msg)
+        rospy.loginfo(f"Rotation Completed: turned {math.degrees(turned_angle):.2f}°")
+        return RotateResponse(f"Requested: {request.degrees} deg, Rotated: {math.degrees(turned_angle):.2f} deg")
 
-        rospy.loginfo("Service Completed")
-        # return RotateResponse(f"Rotation of {request.degrees} degrees completed successfully.")
-        return RotateResponse("Service Completed")
 
 if __name__ == "__main__":
-    server = RotateServiceServer()
-    rospy.spin()
+    try:
+        server = RotateServiceServer()
+        rospy.spin()
+    except rospy.ROSInterruptException:
+        pass
